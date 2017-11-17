@@ -57,7 +57,6 @@ class GameVC: UIViewController, UITextFieldDelegate {
             let keyboardRectangle = keyboardFrame.cgRectValue
             keyboardHeight = keyboardRectangle.height
             self.view.frame = CGRect(x: 0.0, y: -keyboardHeight, width: self.view.frame.width, height: self.view.frame.size.height)
-            //print(keyboardHeight)
         }
     }
     @objc func keyboardWillHide(_ notification: Notification) {
