@@ -11,7 +11,6 @@ import GameplayKit
 
 class GameVC: UIViewController, UITextFieldDelegate {
 
-    
     @IBOutlet weak var number4Image: UIImageView!
     @IBOutlet weak var number3Image: UIImageView!
     @IBOutlet weak var number2Image: UIImageView!
@@ -20,20 +19,13 @@ class GameVC: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var answerText: UITextField!
     @IBOutlet weak var answersLabel: UILabel!
     @IBOutlet weak var scrollView: UIScrollView!
-    
     @IBOutlet weak var commentView: UIView!
     @IBOutlet weak var commentLabel: UILabel!
     
-    
-    
     var times = 0
-    var a = 0
-    var b = 0
     var correctAnswer: [String] = ["","","",""]
-    var userAnswer: [String] = ["","","",""]
-    //var finalAnswer: String = ""
     var record: String = ""
-
+    var keyboardHeight = CGFloat()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,6 +37,31 @@ class GameVC: UIViewController, UITextFieldDelegate {
         // scrollView 設定
         scrollView.contentSize = answersLabel.bounds.size
         scrollView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillShow),
+            name: NSNotification.Name.UIKeyboardWillShow,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillHide),
+            name: NSNotification.Name.UIKeyboardWillHide,
+            object: nil
+        )
+    }
+    
+    @objc func keyboardWillShow(_ notification: Notification) {
+        if let keyboardFrame: NSValue = notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue {
+            let keyboardRectangle = keyboardFrame.cgRectValue
+            keyboardHeight = keyboardRectangle.height
+            self.view.frame = CGRect(x: 0.0, y: -keyboardHeight, width: self.view.frame.width, height: self.view.frame.size.height)
+            //print(keyboardHeight)
+        }
+    }
+    @objc func keyboardWillHide(_ notification: Notification) {
+        self.view.frame = CGRect(x: 0, y: 0, width: self.view.frame.size.width, height: self.view.frame.size.height)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -55,19 +72,19 @@ class GameVC: UIViewController, UITextFieldDelegate {
         super.didReceiveMemoryWarning()
     }
     
-
     @IBAction func backPressed(_ sender: Any) {
         self.dismiss(animated: true, completion: nil)
     }
     
     @IBAction func submitPressed(_ sender: Any) {
-        a = 0
-        b = 0
-        
         if let answer = answerText.text {
             if answer.count == 4 {
-                times += 1
+                var a = 0
+                var b = 0
                 var i = 0
+                times += 1
+                timesLabel.text = "\(times)"
+                
                 // 檢查答案
                 for char in answer {
                     let number = String(char)
@@ -87,11 +104,9 @@ class GameVC: UIViewController, UITextFieldDelegate {
                     correct()
                 } else {
                     // 記錄每次的回答
-                    record = "\(times). \(answer) -- \(a)A\(b)B \n" + record
-                    answersLabel.text = record
-                    timesLabel.text = "\(times)"
+                    recordAnswer(answer: answer, a: a, b: b)
                 }
-                answerText.text = ""
+                
             } else {
                 let alert = MESSAGE(title: "", message: "請輸入四個不同的數字")
                 self.present(alert, animated: true, completion: nil)
@@ -124,13 +139,10 @@ class GameVC: UIViewController, UITextFieldDelegate {
         commentView.isHidden = false
     }
     
-    // 不讓textField被擋住，所以在鍵盤出現時，將view的位置往上移
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-                self.view.frame = CGRect(x: 0.0, y: -200.0, width: self.view.frame.width, height: self.view.frame.size.height)
-    }
-    
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        self.view.frame = CGRect(x: 0, y: 0, width: self.view.frame.size.width, height: self.view.frame.size.height)
+    func recordAnswer(answer: String, a: Int, b: Int) {
+        record = "\(times). \(answer) -- \(a)A\(b)B \n" + record
+        answersLabel.text = record
+        answerText.text = ""
     }
     
     // 數字最多只可輸入四個
